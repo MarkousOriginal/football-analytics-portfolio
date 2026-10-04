@@ -1,0 +1,35 @@
+{
+  "seed": 42,
+  "groups": [
+    {
+      "position": "Goalkeeper",
+      "k": 3,
+      "silhouette": 0.18789157668532336,
+      "rows": 164,
+      "incomplete_rows_dropped": 0
+    },
+    {
+      "position": "Defender",
+      "k": 3,
+      "silhouette": 0.23238444368105426,
+      "rows": 825,
+      "incomplete_rows_dropped": 0
+    },
+    {
+      "position": "Midfielder",
+      "k": 2,
+      "silhouette": 0.29943759279056037,
+      "rows": 608,
+      "incomplete_rows_dropped": 0
+    },
+    {
+      "position": "Attacker",
+      "k": 5,
+      "silhouette": 0.21985533338066088,
+      "rows": 409,
+      "incomplete_rows_dropped": 0
+    }
+  ],
+  "skipped": {},
+  "interpretation": "Exploratory clustering; scores use manually chosen weights, not learned quality labels"
+}

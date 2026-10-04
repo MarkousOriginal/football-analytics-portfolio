@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import MinMaxScaler
-from .common import load_fifa, match_fifa, metrics, write_json, scatter
+from .common import load_fifa, fifa_snapshot, match_fifa, metrics, write_json, scatter
 from .forecast_data import make_panel, make_windows, split_masks, scale_sequences, STATS
 
 FIFA_FEATURES = ["overall", "attacking_finishing", "attacking_volleys", "movement_reactions", "pace",
@@ -67,6 +67,7 @@ def run(args):
     X, y, rows = make_windows(panel, args.lookback)
     static = None
     static_features = []
+    snapshot = None
     if args.fifa:
         if args.fifa_observed_year is None:
             raise ValueError("With --fifa, provide --fifa-observed-year: actual year this snapshot was available, not the edition number")
@@ -76,6 +77,8 @@ def run(args):
         if not len(rows):
             raise ValueError("No target year is later than the FIFA snapshot observation year")
         fifa = load_fifa(args.fifa, [f for f in FIFA_FEATURES if f != "overall"], args.fifa_version)
+        # The edition number alone does not prove availability; check the recorded update dates.
+        snapshot = fifa_snapshot(fifa, args.fifa_observed_year)
         matched, audit = match_fifa(players, fifa, args.match_threshold, args.match_margin)
         audit.to_csv(out / "match_audit.csv", index=False)
         static = rows.merge(matched[["player_id"] + FIFA_FEATURES], on="player_id", how="left", validate="many_to_one")[FIFA_FEATURES].to_numpy(dtype=float)
@@ -114,9 +117,13 @@ def run(args):
     row_split = rows.copy(); row_split["split"] = np.select(masks, ["train", "validation", "test"], default="unused")
     row_split.to_csv(out / "split_audit.csv", index=False)
     joblib.dump(preprocess, out / "preprocessing.joblib")
+    # Splits are by year, not by player: test players may also appear in earlier training years.
+    test_players = rows.loc[test, "player_id"]
     write_json(out / "run.json", {"seed": args.seed, "lookback": args.lookback, "train_end": args.train_end,
         "val_year": args.val_year, "test_year": args.test_year, "train_n": int(train.sum()), "val_n": int(val.sum()),
-        "test_n": int(test.sum()), "fifa_observed_year": args.fifa_observed_year, "fifa_version": args.fifa_version,
+        "test_n": int(test.sum()), "test_players": int(test_players.nunique()),
+        "test_players_also_in_training": int(test_players[test_players.isin(rows.loc[train, "player_id"])].nunique()),
+        "fifa_observed_year": args.fifa_observed_year, "fifa_version": args.fifa_version, "fifa_snapshot": snapshot,
         "results": results, "target": "Mean observed market value in euros during the target calendar year",
         "population": "Players with complete consecutive histories; not a test of unseen-player generalization"})
     print(pd.DataFrame(results).to_string(index=False))

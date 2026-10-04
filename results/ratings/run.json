@@ -1,0 +1,17 @@
+{
+  "seed": 42,
+  "performance_year": 2023,
+  "fifa_version": "24",
+  "fifa_snapshot": {
+    "fifa_version": [
+      "24.0"
+    ],
+    "fifa_update": [
+      "2.0"
+    ],
+    "update_as_of_min": "2023-09-22",
+    "update_as_of_max": "2023-09-22"
+  },
+  "skipped_groups": {},
+  "task": "Contemporaneous rating reconstruction, not future football performance forecasting"
+}

@@ -17,7 +17,7 @@ command-line project:
 
 | Workflow | Result |
 | --- | --- |
-| Forecasting | LSTM reduces MAE by **36%** against a persistence baseline on 642 held-out players in 2024 (R² 0.92 vs 0.84) |
+| Forecasting | LSTM reduces MAE by **36%** against a persistence baseline on 642 player-year forecasts in the 2024 holdout (R² 0.92 vs 0.84) |
 | Ratings | Performance stats alone explain **41–65%** of FIFA overall for outfield players; adding FIFA attributes gives R² 0.90–0.98 |
 | Scouting | 2,006 players clustered into 2–5 profiles per position (silhouette 0.19–0.30) |
 
@@ -25,8 +25,13 @@ command-line project:
 
 Each sample is a player's ten previous calendar years of market value, goals,
 assists, minutes and appearances. The target is the player's mean market value in
-the following year. Training uses target year 2022, early stopping uses 2023, and
-2024 is used once as the final test.
+the following year. Training uses target year 2022 (644 samples), early stopping
+uses 2023 (698), and 2024 (642) is used once as the final test.
+
+The split is by year, not by player. Each 2024 forecast is for a different player,
+but 361 of those 642 players also appear as 2022 training samples. The result
+measures forecasting a future year for known players, not generalization to
+unseen players.
 
 | Model | MAE | RMSE | R² | MAE vs persistence |
 | --- | --- | --- | --- | --- |
@@ -38,13 +43,19 @@ the following year. Training uses target year 2022, early stopping uses 2023, an
 
 **FIFA attributes did not help.** Both LSTM variants used exactly the same players
 and years, and the model conditioned on FIFA 22 attributes was less accurate than
-the one using match history alone. FIFA 22 was released in September 2021, so it
-is only used for target years from 2022 onwards. This prevents information from
-the future leaking into training.
+the one using match history alone.
+
+Every FIFA 22 row used is dated **2021-09-23** in the dataset's `update_as_of` column,
+so the attributes are only used for target years from 2022 onwards. The code reads
+these dates, records them in `run.json`, and stops if any row is dated after
+`--fifa-observed-year`. This date comes from the Kaggle dataset; it shows when the
+snapshot was taken, but cannot rule out later corrections made by the dataset's
+compiler.
 
 ### 2. FIFA rating reconstruction (XGBoost)
 
-Players are matched between Transfermarkt and FIFA 24 by name, and a separate model
+Players are matched between Transfermarkt and FIFA 24 (update dated 2023-09-22) by
+name, and a separate model
 is trained for each position on 2023 statistics. Each model is evaluated on a 20%
 player holdout.
 
@@ -78,7 +89,21 @@ are standardized, and k between 2 and 6 is chosen by silhouette score.
 
 Silhouette values of 0.2–0.3 mean that the profiles overlap: player styles form a
 continuum rather than separate types. Cluster IDs carry no meaning, so profiles are
-interpreted from the cluster means written to `outputs/scouting/`.
+interpreted from the cluster means in `results/scouting/`.
+
+## Result files
+
+The exact numbers above can be checked in [`results/`](results/), copied from the
+runs that produced them:
+
+| Folder | Files |
+| --- | --- |
+| [`results/forecast/`](results/forecast/) | `metrics.csv`, `run.json` (split sizes, test-player overlap with training, FIFA snapshot dates) |
+| [`results/ratings/`](results/ratings/) | `metrics.csv` (all positions and variants), `run.json` (FIFA snapshot dates) |
+| [`results/scouting/`](results/scouting/) | `run.json`, `<Position>_k_selection.csv` (silhouette for every k), `<Position>_cluster_means.csv` |
+
+Rerunning the commands under [Usage](#usage) with the same data and the default
+seed reproduces these metrics.
 
 ## Methodology
 
@@ -145,7 +170,8 @@ python -m unittest discover -s tests -v
 ```
 
 The tests check position parsing, name collisions, FIFA edition handling,
-chronological windows, split disjointness and training-only scaling. An integration
+chronological windows, split disjointness, training-only scaling and FIFA snapshot
+dates. An integration
 test runs all three workflows end to end on generated data. GitHub Actions runs the
 suite on every push.
 
@@ -154,6 +180,9 @@ suite on every push.
 - Calendar years are used instead of football seasons.
 - The forecast needs ten consecutive years of history, so it covers experienced
   players only.
+- The forecast holdout is a future year, not a set of unseen players.
+- FIFA snapshot dates are taken from the Kaggle dataset and are not independently
+  verified.
 - Name-based matching can still produce occasional false matches.
 - The scouting features mix season totals with per-90 rates, and the ranking
   weights in `scouting_results.csv` are hand-chosen rather than learned.

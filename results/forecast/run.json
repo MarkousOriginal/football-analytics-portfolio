@@ -1,0 +1,51 @@
+{
+  "seed": 42,
+  "lookback": 10,
+  "train_end": 2022,
+  "val_year": 2023,
+  "test_year": 2024,
+  "train_n": 644,
+  "val_n": 698,
+  "test_n": 642,
+  "test_players": 642,
+  "test_players_also_in_training": 361,
+  "fifa_observed_year": 2021,
+  "fifa_version": "22",
+  "fifa_snapshot": {
+    "fifa_version": [
+      "22.0"
+    ],
+    "fifa_update": [
+      "2.0"
+    ],
+    "update_as_of_min": "2021-09-23",
+    "update_as_of_max": "2021-09-23"
+  },
+  "results": [
+    {
+      "variant": "persistence",
+      "mae": 2139469.75,
+      "rmse": 4083908.4245639006,
+      "r2": 0.836599588394165,
+      "mae_improvement_pct": 0.0
+    },
+    {
+      "variant": "lstm_without_fifa",
+      "mae": 1377217.75,
+      "rmse": 2869045.714496721,
+      "r2": 0.9193552136421204,
+      "mae_improvement_pct": 35.628080275498164,
+      "best_epoch": 61
+    },
+    {
+      "variant": "lstm_fifa_attention",
+      "mae": 1596436.0,
+      "rmse": 3015095.967894886,
+      "r2": 0.9109357595443726,
+      "mae_improvement_pct": 25.38169796511496,
+      "best_epoch": 61
+    }
+  ],
+  "target": "Mean observed market value in euros during the target calendar year",
+  "population": "Players with complete consecutive histories; not a test of unseen-player generalization"
+}

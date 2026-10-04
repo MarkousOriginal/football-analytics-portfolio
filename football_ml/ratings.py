@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split
-from .common import (load_players, load_performance, load_fifa, match_fifa,
+from .common import (load_players, load_performance, load_fifa, fifa_snapshot, match_fifa,
                      map_fifa_position, metrics, write_json, scatter, require_columns)
 
 EXTRA = {
@@ -78,6 +78,6 @@ def run(args):
     if predictions:
         pd.concat(predictions, ignore_index=True).to_csv(out / "predictions.csv", index=False)
     write_json(out / "run.json", {"seed": args.seed, "performance_year": args.performance_year,
-        "fifa_version": args.fifa_version, "skipped_groups": skipped,
+        "fifa_version": args.fifa_version, "fifa_snapshot": fifa_snapshot(fifa), "skipped_groups": skipped,
         "task": "Contemporaneous rating reconstruction, not future football performance forecasting"})
     print(pd.DataFrame(results).to_string(index=False))

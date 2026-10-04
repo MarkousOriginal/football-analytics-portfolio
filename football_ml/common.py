@@ -95,6 +95,25 @@ def load_fifa(path, features, version=None):
     return df.dropna(subset=["overall"]).reset_index(drop=True)
 
 
+def fifa_snapshot(fifa, observed_year=None):
+    """Record the snapshot's edition/update dates and reject dates after the observation year."""
+    info = {}
+    for col in ["fifa_version", "fifa_update"]:
+        if col in fifa:
+            info[col] = sorted(str(v) for v in fifa[col].dropna().unique())
+    if "update_as_of" in fifa:
+        dates = pd.to_datetime(fifa.update_as_of, errors="coerce")
+        if dates.isna().any():
+            raise ValueError("FIFA update_as_of contains missing or invalid dates")
+        info["update_as_of_min"] = dates.min().date().isoformat()
+        info["update_as_of_max"] = dates.max().date().isoformat()
+        if observed_year is not None and dates.max().year > observed_year:
+            raise ValueError(f"FIFA rows are dated up to {info['update_as_of_max']}, after --fifa-observed-year {observed_year}")
+    else:
+        info["update_as_of_max"] = None
+    return info
+
+
 def match_fifa(players, fifa, threshold=90, margin=5):
     from rapidfuzz import process, fuzz
     names = fifa.clean_name.tolist()
