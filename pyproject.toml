@@ -1,0 +1,19 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "football-analytics-portfolio"
+version = "0.1.0"
+description = "XGBoost rating reconstruction, KMeans scouting and LSTM market-value forecasting"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.10"
+authors = [{name = "Markos Pantelis"}]
+dependencies = ["numpy>=1.26,<3", "pandas>=2.2,<3", "scikit-learn>=1.4,<2", "matplotlib>=3.8,<4", "seaborn>=0.13,<1", "joblib>=1.3,<2", "rapidfuzz>=3.9,<4", "xgboost>=1.7.6,<4"]
+
+[project.optional-dependencies]
+deep-learning = ["torch>=2.5,<3"]
+
+[tool.setuptools.packages.find]
+include = ["football_ml*"]
